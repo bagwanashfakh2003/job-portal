@@ -1,0 +1,445 @@
+import React, { useMemo, useState } from "react";
+import Navbar from "./shared/Navbar";
+import { useSelector } from "react-redux";
+
+import useGetAppliedJobs from "@/hooks/useGetAppliedJobs";
+
+import AppliedJobTable from "./AppliedJobTable";
+import UpdateProfileDialog from "./UpdateProfileDialog";
+
+import { Button } from "./ui/button";
+
+import {
+  Pen,
+  Mail,
+  Contact,
+  Download,
+  MapPin,
+  Briefcase,
+  GraduationCap,
+  User,
+} from "lucide-react";
+
+const Profile = () => {
+  useGetAppliedJobs();
+
+  const [open, setOpen] = useState(false);
+
+  const { user } = useSelector((store) => store.auth);
+
+  const profile = user?.profile || {};
+
+  // ================= PROFILE COMPLETION =================
+
+  const completion = useMemo(() => {
+    let score = 0;
+
+    const total = 10;
+
+    if (user?.fullname) score++;
+    if (user?.email) score++;
+    if (user?.phoneNumber) score++;
+
+    if (profile?.bio) score++;
+
+    if (profile?.skills?.length) score++;
+
+    if (profile?.profilePhoto) score++;
+
+    if (profile?.resume) score++;
+
+    if (profile?.experience?.length) score++;
+
+    if (profile?.education?.length) score++;
+
+    if (profile?.location) score++;
+
+    return Math.round((score / total) * 100);
+  }, [user, profile]);
+
+  return (
+    <div className="min-h-screen bg-[#f4f7fb]">
+      <Navbar />
+
+      <div className="max-w-7xl mx-auto px-4 py-6">
+        {/* ================= TOP PROFILE CARD ================= */}
+
+        <div className="bg-white border border-gray-200 rounded-3xl shadow-sm overflow-hidden">
+          {/* TOP GRADIENT */}
+
+          <div className="h-32 bg-gradient-to-r from-indigo-600 via-blue-500 to-purple-600" />
+
+          {/* PROFILE CONTENT */}
+
+          <div className="px-6 pb-6 relative">
+            <div className="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-6">
+              {/* LEFT */}
+
+              <div className="flex flex-col sm:flex-row sm:items-end gap-5 -mt-14">
+                {/* IMAGE */}
+
+                <div className="relative">
+                  <img
+                    src={
+                      profile?.profilePhoto ||
+                      "https://via.placeholder.com/150"
+                    }
+                    alt="profile"
+                    className="w-28 h-28 rounded-3xl object-cover border-[5px] border-white shadow-lg bg-white"
+                    onError={(e) => {
+                      e.target.src =
+                        "https://via.placeholder.com/150";
+                    }}
+                  />
+                </div>
+
+                {/* USER INFO */}
+
+                <div className="pb-1">
+                  <h1 className="text-3xl font-bold text-gray-900">
+                    {user?.fullname || "User"}
+                  </h1>
+
+                  <p className="text-gray-600 mt-2 max-w-2xl leading-relaxed">
+                    {profile?.bio || "No bio added"}
+                  </p>
+
+                  {/* CONTACT */}
+
+                  <div className="flex flex-wrap gap-4 mt-4 text-sm text-gray-500">
+                    <div className="flex items-center gap-2">
+                      <Mail size={15} />
+                      <span>{user?.email || "N/A"}</span>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <Contact size={15} />
+                      <span>{user?.phoneNumber || "N/A"}</span>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <MapPin size={15} />
+                      <span>
+                        {profile?.location || "No location"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* RIGHT */}
+
+              <div className="xl:w-[320px]">
+                <div className="bg-gray-50 border border-gray-200 rounded-2xl p-5">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-gray-500">
+                        Profile Completion
+                      </p>
+
+                      <h2 className="text-3xl font-bold text-gray-900 mt-1">
+                        {completion}%
+                      </h2>
+                    </div>
+
+                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-r from-indigo-500 to-purple-500" />
+                  </div>
+
+                  {/* PROGRESS */}
+
+                  <div className="w-full bg-gray-200 rounded-full h-3 mt-4 overflow-hidden">
+                    <div
+                      className="h-3 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all duration-500"
+                      style={{
+                        width: `${completion}%`,
+                      }}
+                    />
+                  </div>
+
+                  {/* BUTTONS */}
+
+                  <div className="flex flex-wrap gap-3 mt-5">
+                    <Button
+                      onClick={() => setOpen(true)}
+                      className="rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:opacity-90"
+                    >
+                      <Pen size={16} className="mr-2" />
+                      Edit Profile
+                    </Button>
+
+                    {profile?.resume ? (
+                      <a
+                        href={profile.resume}
+                        download={profile.resumeOriginalName}
+                        rel="noopener noreferrer"
+                      >
+                        <Button
+                          variant="outline"
+                          className="rounded-xl border-gray-300"
+                        >
+                          <Download
+                            size={16}
+                            className="mr-2"
+                          />
+                          Resume
+                        </Button>
+                      </a>
+                    ) : (
+                      <Button
+                        disabled
+                        variant="outline"
+                        className="rounded-xl"
+                      >
+                        No Resume
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ================= MAIN CONTENT ================= */}
+
+        <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 mt-6">
+          {/* ================= LEFT SIDEBAR ================= */}
+
+          <div className="xl:col-span-4 space-y-6">
+            {/* ABOUT */}
+
+            <Card>
+              <SectionTitle
+                icon={<User size={18} />}
+                title="About"
+              />
+
+              <div className="space-y-3 mt-5">
+                <InfoRow
+                  label="Age"
+                  value={profile?.age}
+                />
+
+                <InfoRow
+                  label="Experience"
+                  value={`${profile?.experienceYears || 0} yrs`}
+                />
+
+                <InfoRow
+                  label="Expected CTC"
+                  value={profile?.ctc}
+                />
+
+                <InfoRow
+                  label="Location"
+                  value={profile?.location}
+                />
+              </div>
+            </Card>
+
+            {/* SKILLS */}
+
+            <Card>
+              <SectionTitle
+                icon={<Briefcase size={18} />}
+                title="Skills"
+              />
+
+              {profile?.skills?.length > 0 ? (
+                <div className="flex flex-wrap gap-3 mt-5">
+                  {profile.skills.map((skill, index) => (
+                    <span
+                      key={index}
+                      className="px-4 py-2 rounded-full bg-indigo-50 text-indigo-700 text-sm font-medium hover:bg-indigo-600 hover:text-white transition-all duration-300"
+                    >
+                      {skill}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-gray-400 mt-4">
+                  No skills added
+                </p>
+              )}
+            </Card>
+
+            {/* NOTES */}
+
+            {profile?.notes && (
+              <Card>
+                <SectionTitle
+                  icon={<Mail size={18} />}
+                  title="Notes"
+                />
+
+                <p className="text-sm text-gray-600 leading-relaxed mt-5">
+                  {profile.notes}
+                </p>
+              </Card>
+            )}
+          </div>
+
+          {/* ================= RIGHT CONTENT ================= */}
+
+          <div className="xl:col-span-8 space-y-6">
+            {/* APPLIED JOBS */}
+
+            <Card>
+              <SectionTitle
+                icon={<Briefcase size={18} />}
+                title="Applied Jobs"
+              />
+
+              <div className="mt-5 overflow-x-auto">
+                <AppliedJobTable />
+              </div>
+            </Card>
+
+            {/* EXPERIENCE */}
+
+            <Card>
+              <SectionTitle
+                icon={<Briefcase size={18} />}
+                title="Experience"
+              />
+
+              {profile?.experience?.filter(
+                (exp) => exp.company
+              )?.length > 0 ? (
+                <div className="relative border-l-2 border-indigo-100 ml-3 mt-6">
+                  {profile.experience
+                    .filter((exp) => exp.company)
+                    .map((exp, index) => (
+                      <div
+                        key={index}
+                        className="relative ml-5 mb-5"
+                      >
+                        <div className="absolute -left-[27px] top-2 w-4 h-4 rounded-full bg-indigo-500 border-4 border-white shadow-sm" />
+
+                        <div className="bg-gray-50 border border-gray-200 rounded-2xl p-5 hover:shadow-md transition-all duration-300">
+                          <div className="flex flex-col sm:flex-row sm:justify-between gap-4">
+                            <div>
+                              <h3 className="font-semibold text-lg text-gray-900">
+                                {exp.company}
+                              </h3>
+
+                              <p className="text-sm text-indigo-600 mt-1">
+                                {exp.role ||
+                                  "Role not specified"}
+                              </p>
+
+                              {exp.location && (
+                                <p className="text-xs text-gray-500 mt-3">
+                                  {exp.location}
+                                </p>
+                              )}
+                            </div>
+
+                            <div className="text-xs text-gray-500 whitespace-nowrap">
+                              {exp.startDate || "N/A"} —{" "}
+                              {exp.endDate || "Present"}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              ) : (
+                <p className="text-sm text-gray-400 mt-4">
+                  No experience added
+                </p>
+              )}
+            </Card>
+
+            {/* EDUCATION */}
+
+            <Card>
+              <SectionTitle
+                icon={<GraduationCap size={18} />}
+                title="Education"
+              />
+
+              {profile?.education?.length > 0 ? (
+                <div className="space-y-5 mt-5">
+                  {profile.education.map((edu, index) => (
+                    <div
+                      key={index}
+                      className="border border-gray-200 rounded-2xl p-5 bg-gray-50 hover:shadow-md transition-all duration-300"
+                    >
+                      <div className="flex flex-col sm:flex-row sm:justify-between gap-4">
+                        <div>
+                          <h3 className="font-semibold text-lg text-gray-900">
+                            {edu.degree || "Degree"}
+                          </h3>
+
+                          <p className="text-sm text-indigo-600 mt-1">
+                            {edu.institute || "Institute"}
+                          </p>
+                        </div>
+
+                        <div className="text-xs text-gray-500 whitespace-nowrap">
+                          {edu.startYear || "N/A"} —{" "}
+                          {edu.endYear || "Present"}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-gray-400 mt-4">
+                  No education added
+                </p>
+              )}
+            </Card>
+          </div>
+        </div>
+      </div>
+
+      {/* ================= DIALOG ================= */}
+
+      <UpdateProfileDialog open={open} setOpen={setOpen} />
+    </div>
+  );
+};
+
+// ================= CARD =================
+
+const Card = ({ children }) => {
+  return (
+    <div className="bg-white border border-gray-200 rounded-3xl p-5 shadow-sm hover:shadow-md transition-all duration-300">
+      {children}
+    </div>
+  );
+};
+
+// ================= SECTION TITLE =================
+
+const SectionTitle = ({ icon, title }) => {
+  return (
+    <div className="flex items-center gap-3">
+      <div className="w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+        {icon}
+      </div>
+
+      <h2 className="text-xl font-semibold text-gray-900">
+        {title}
+      </h2>
+    </div>
+  );
+};
+
+// ================= INFO ROW =================
+
+const InfoRow = ({ label, value }) => {
+  return (
+    <div className="flex items-center justify-between bg-gray-50 border border-gray-200 rounded-2xl px-4 py-3">
+      <p className="text-sm text-gray-500">{label}</p>
+
+      <p className="font-medium text-gray-900">
+        {value || "N/A"}
+      </p>
+    </div>
+  );
+};
+
+export default Profile;

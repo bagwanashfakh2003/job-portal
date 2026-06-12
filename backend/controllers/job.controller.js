@@ -21,24 +21,28 @@ export const postJob = async (req, res) => {
       companyId
     } = req.body;
 
+    console.log("REQ BODY:", req.body);
+
     const userId = req.id;
 
-    if (
-      !title ||
-      !description ||
-      !requirements ||
-      !salary ||
-      !location ||
-      !jobType ||
-      !experience ||
-      !position ||
-      !companyId
-    ) {
-      return res.status(400).json({
-        message: "All fields are required",
-        success: false
-      });
-    }
+    if (!title) return res.status(400).json({ message: "Title missing" });
+
+if (!description) return res.status(400).json({ message: "Description missing" });
+
+if (!requirements) return res.status(400).json({ message: "Requirements missing" });
+
+if (!salary) return res.status(400).json({ message: "Salary missing" });
+
+if (!location) return res.status(400).json({ message: "Location missing" });
+
+if (!jobType) return res.status(400).json({ message: "Job Type missing" });
+
+if (!experience) return res.status(400).json({ message: "Experience missing" });
+
+if (!position) return res.status(400).json({ message: "Position missing" });
+
+if (!companyId) return res.status(400).json({ message: "Company missing" });
+    
 
     const job = await Job.create({
       title,

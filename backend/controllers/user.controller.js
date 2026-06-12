@@ -55,152 +55,7 @@ export const register = async (req, res) => {
   }
 };
 
-// export const register = async (req, res) => {
-//   try {
-//     const { fullname, email, phoneNumber, password, role } = req.body;
 
-//     if (!fullname || !email || !phoneNumber || !password || !role) {
-//       return res.status(400).json({
-//         message: "Something is missing",
-//         success: false,
-//       });
-//     }
-
-//     // const file = req.file;
-
-//     // let profilePhoto = "";
-
-//     // if (file) {
-//     //   const fileUri = getDataUri(file);
-
-//     //   if (fileUri) {
-//     //     const cloudResponse = await cloudinary.uploader.upload(fileUri.content);
-//     //     profilePhoto = cloudResponse.secure_url;
-//     //   }
-//     // }
-
-//     const file = req.file;
-
-// // ✅ size check
-// if (file && file.size > 2 * 1024 * 1024) {
-//   return res.status(400).json({
-//     message: "Image size should be less than 2MB",
-//     success: false
-//   });
-// }
-
-// // ✅ type check
-// if (file && !file.mimetype.startsWith("image/")) {
-//   return res.status(400).json({
-//     message: "Only image files are allowed",
-//     success: false
-//   });
-// }
-
-// let profilePhoto = "";
-
-// if (file) {
-//   try {
-//     const fileUri = getDataUri(file);
-
-//     if (fileUri) {
-//       const cloudResponse = await cloudinary.uploader.upload(fileUri.content);
-//       profilePhoto = cloudResponse.secure_url;
-//     }
-//   } catch (error) {
-//     console.log("Cloudinary error:", error);
-//   }
-// }
-
-//     const user = await User.findOne({ email });
-//     if (user) {
-//       return res.status(400).json({
-//         message: "User already exist with this email.",
-//         success: false,
-//       });
-//     }
-
-//     const hashedPassword = await bcrypt.hash(password, 10);
-
-//     await User.create({
-//       fullname,
-//       email,
-//       phoneNumber,
-//       password: hashedPassword,
-//       role,
-//       profile: {
-//         profilePhoto: profilePhoto, // ✅ FIXED
-//       },
-//     });
-
-//     return res.status(201).json({
-//       message: "Account created successfully.",
-//       success: true,
-//     });
-
-//   } catch (error) {
-//     console.log(error);
-//     return res.status(500).json({
-//       message: "Server error",
-//       success: false,
-//     });
-//   }
-// };
-// // export const register = async (req, res) => {
-//   try {
-//     const { fullname, email, phoneNumber, password, role } = req.body;
-
-//     if (!fullname || !email || !phoneNumber || !password || !role) {
-//       return res.status(400).json({
-//         message: "Something is missing",
-//         success: false,
-//       });
-//     }
-//     // const file = req.file;
-//     // const fileUri = getDataUri(file);
-//     // const cloudResponse = await cloudinary.uploader.upload(fileUri.content);
-
-//     const file = req.file;
-
-//     let profilePhoto = "";
-
-//     if (file) {
-//       const fileUri = getDataUri(file);
-
-//       if (fileUri) {
-//         const cloudResponse = await cloudinary.uploader.upload(fileUri.content);
-//         profilePhoto = cloudResponse.secure_url;
-//       }
-//     }
-
-//     const user = await User.findOne({ email });
-//     if (user) {
-//       return res.status(400).json({
-//         message: "User already exist with this email.",
-//         success: false,
-//       });
-//     }
-//     const hashedPassword = await bcrypt.hash(password, 10);
-
-//     await User.create({
-//       fullname,
-//       email,
-//       phoneNumber,
-//       password: hashedPassword,
-//       role,
-//       profile: {
-//         profilePhoto: cloudResponse.secure_url,
-//       },
-//     });
-
-//     return res.status(201).json({
-//       message: "Account created successfully.",
-//       success: true,
-//     });
-//   } catch (error) {
-//     console.log(error);
-//   }
-// };
 export const login = async (req, res) => {
   try {
     const { email, password, role } = req.body;
@@ -278,7 +133,20 @@ export const logout = async (req, res) => {
 
 export const updateProfile = async (req, res) => {
   try {
-    const { fullname, email, phoneNumber, bio, skills } = req.body;
+    const {
+  fullname,
+  email,
+  phoneNumber,
+  bio,
+  skills,
+  age,
+  location,
+  ctc,
+  experienceYears,
+  notes,
+  experience,
+  education
+} = req.body;
 
     const profilePhotoFile = req.files?.profilePhoto?.[0];
     const resumeFile = req.files?.resume?.[0];
@@ -293,11 +161,29 @@ export const updateProfile = async (req, res) => {
       });
     }
 
-    // ✅ BASIC FIELDS
-    if (fullname) user.fullname = fullname;
-    if (email) user.email = email;
-    if (phoneNumber) user.phoneNumber = phoneNumber;
-    if (bio) user.profile.bio = bio;
+   // ===== NEW PROFILE FIELDS =====
+if (age) user.profile.age = age;
+if (location) user.profile.location = location;
+if (ctc) user.profile.ctc = ctc;
+if (experienceYears) user.profile.experienceYears = experienceYears;
+if (notes) user.profile.notes = notes;
+
+// Arrays (handle JSON or direct array)
+if (experience) {
+  try {
+    user.profile.experience = JSON.parse(experience);
+  } catch {
+    user.profile.experience = experience;
+  }
+}
+
+if (education) {
+  try {
+    user.profile.education = JSON.parse(education);
+  } catch {
+    user.profile.education = education;
+  }
+}
 
     // ✅ MANUAL SKILLS
     if (skills) {
@@ -319,51 +205,157 @@ export const updateProfile = async (req, res) => {
 
     // ✅ RESUME UPLOAD (FIXED — BUFFER STREAM)
 if (resumeFile) {
-  const uploadFromBuffer = () =>
-    new Promise((resolve, reject) => {
-      const stream = cloudinary.uploader.upload_stream(
+
+  // =========================
+  // VALIDATION
+  // =========================
+
+  const allowedMimeTypes = [
+    "application/pdf",
+  ];
+
+  if (
+    !allowedMimeTypes.includes(
+      resumeFile.mimetype
+    )
+  ) {
+    return res.status(400).json({
+      success: false,
+      message: "Only PDF files are allowed",
+    });
+  }
+
+  // 5MB LIMIT
+  if (resumeFile.size > 5 * 1024 * 1024) {
+    return res.status(400).json({
+      success: false,
+      message: "Maximum file size is 5MB",
+    });
+  }
+
+  try {
+
+    // =========================
+    // CLEAN FILE NAME
+    // =========================
+
+
+
+    // =========================
+    // CLOUDINARY UPLOAD
+    // =========================
+
+  const fileNameWithoutExt =
+  resumeFile.originalname
+    .replace(/\.[^/.]+$/, "")
+    .replace(/\s+/g, "_");
+
+const uploadFromBuffer = () =>
+  new Promise((resolve, reject) => {
+
+    const stream =
+      cloudinary.uploader.upload_stream(
         {
-          resource_type: "image", // Crucial: treats PDF as viewable media
-          format: "pdf",          
+          resource_type: "raw",
+
+          folder: "resumes",
+
+          access_mode: "public",
+
+          // IMPORTANT
+          // no .pdf here
+          public_id:
+            `${Date.now()}-${fileNameWithoutExt}`,
+
+          overwrite: true,
         },
+
         (error, result) => {
-          if (error) return reject(error);
+
+          if (error) {
+            console.log(
+              "Cloudinary Upload Error:",
+              error
+            );
+
+            return reject(error);
+          }
+
           resolve(result);
         }
       );
-      stream.end(resumeFile.buffer);
-    });
 
-  const result = await uploadFromBuffer();
+    // upload binary directly
+    stream.end(resumeFile.buffer);
+  });
 
-  // --- VIEW IN CONSOLE ---
-  console.log("PDF Uploaded Successfully!");
-  console.log("Viewable URL:", result.secure_url); 
-  // -----------------------
+const result =
+  await uploadFromBuffer();
 
-  user.profile.resume = result.secure_url;
-  user.profile.resumeOriginalName = resumeFile.originalname;
+console.log(result.secure_url);
+    // =========================
+    // SAVE URL
+    // =========================
 
-  // ... (Skill extraction logic)
+    user.profile.resume =
+      result.secure_url;
 
+    user.profile.resumeOriginalName =
+      resumeFile.originalname;
 
-      // ✅ SKILL EXTRACTION
-      if (!skills) {
-        try {
-          const data = await pdf(resumeFile.buffer);
-          const text = data.text || "";
+    // =========================
+    // SKILL EXTRACTION
+    // =========================
 
-          const extracted = extractSkills(text);
+    if (!skills) {
 
-          if (extracted.length > 0) {
-            user.profile.skills = extracted;
-            user.profile.skillsSource = "resume";
-          }
-        } catch (err) {
-          console.log("PDF parse error:", err);
+      try {
+
+        // PDF PARSE
+        const data = await pdf(
+          resumeFile.buffer
+        );
+
+        const text =
+          data.text || "";
+
+        // EXTRACT SKILLS
+        const extracted =
+          extractSkills(text);
+
+        if (extracted.length > 0) {
+
+          user.profile.skills =
+            extracted;
+
+          user.profile.skillsSource =
+            "resume";
         }
+
+      } catch (err) {
+
+        console.log(
+          "PDF Parse Error:",
+          err
+        );
+
       }
     }
+
+  } catch (err) {
+
+    console.log(
+      "Resume Upload Error:",
+      err
+    );
+
+    return res.status(500).json({
+      success: false,
+      message:
+        "Failed to upload resume",
+    });
+  }
+}
 
     // ✅ SAVE USER
     await user.save();
